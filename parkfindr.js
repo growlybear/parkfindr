@@ -32,7 +32,7 @@ var getParks = (function () {
         if (now > cache.refreshed + cache.refreshInterval) {
             cache.refreshed = now;
 
-            http.get('http://api.civicapps.org/parks', function (res) {
+            http.get('http://api.civicapps.org/parks/', function (res) {
                 var json = '';
 
                 res.on('data', function (chunk) {
@@ -40,18 +40,19 @@ var getParks = (function () {
                 });
 
                 res.on('end', function () {
+                    var parks = JSON.parse(json);
+
                     try {
                         if (parks.status !== 'ok') {
                             throw new Error('API failed with status ' + status);
                         }
 
-                        var parks = JSON.parse(json);
                         var parksById = {};
 
                         cache.parks = parks.results.map(function (park) {
                             park = {
                                 id: park.PropertyID,
-                                name: park.Property,
+                                name: park.Property.trim(),
                                 amenities: park.amenities,
                                 loc: {
                                     lat: park.loc.lat,
