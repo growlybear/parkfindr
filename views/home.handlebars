@@ -2,9 +2,7 @@
   <div class="col-sm-6">
     <div id="map"></div>
   </div>
-</div>
 
-<div class="row">
   <div class="col-sm-6">
     <div id="parkInfo"></div>
   </div>
@@ -34,7 +32,7 @@
                 });
 
                 google.maps.event.addListener(marker, 'click', function () {
-                    $.get('/partials/park-info' + park.id, function (data) {
+                    $.get('/partials/park-info/' + park.id, function (data) {
                         $('#parkInfo').html(data);
                     });
                 });
