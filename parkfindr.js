@@ -18,10 +18,68 @@ app.use(express.static(__dirname + '/public'));
 
 
 // Helper functions
-function getParks(callback) {
-    // fetch info from remote api
-    callback(data);
-}
+var getParks = (function () {
+
+    var cache = {
+        refreshed: 0,
+        refreshInterval: 1000 * 60 * 60 * 24,
+        parks: []
+    };
+
+    return function (callback) {
+        var now = Date.now();
+
+        if (now > cache.refreshed + cache.refreshInterval) {
+            cache.refreshed = now;
+
+            http.get('http://api.civicapps.org/parks', function (res) {
+                var json = '';
+
+                res.on('data', function (chunk) {
+                    json += chunk;
+                });
+
+                res.on('end', function () {
+                    try {
+                        if (parks.status !== 'ok') {
+                            throw new Error('API failed with status ' + status);
+                        }
+
+                        var parks = JSON.parse(json);
+                        var parksById = {};
+
+                        cache.parks = parks.results.map(function (park) {
+                            park = {
+                                id: park.PropertyID,
+                                name: park.Property,
+                                amenities: park.amenities,
+                                loc: {
+                                    lat: park.loc.lat,
+                                    lng: park.loc.lon
+                                }
+                            };
+
+                            parksById[park.id] = park;
+
+                            return park;
+                        });
+
+                        cache.parks.byId = parksById;
+                        console.log(new Date() + ': parks cache refreshed');
+                    }
+                    catch (err) {
+                        console.error('Error refreshing parks cache:', err.stack);
+                    }
+
+                    callback(cache.parks);
+                });
+            });
+        }
+        else {
+            callback(cache.parks);
+        }
+    };
+}());
 
 
 // Routes table
